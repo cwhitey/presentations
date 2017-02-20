@@ -1,18 +1,38 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Title</title>
+    <title>Intro to Clojurescript</title>
     <meta charset="utf-8">
     <style>
       @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Montserrat:400,400i,700);
       @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
-      body { font-family: 'Georgia';letter-spacing:0.025em;}
-      h1, h2, h3 {
-        font-family: 'Georgia';
-        font-weight: normal;
+      @import url(https://fonts.googleapis.com/css?family=PT+Mono);
+      body { font-family: 'Montserrat';
+          letter-spacing: 0.025em;
       }
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-container {
+      }
+      h1, h2, h3 {
+          font-family: 'Montserrat';
+          font-weight: normal;
+      }
+      .remark-slide-content {
+          background-color: #46483d;
+          color: #ffffff;
+          font-size: 30px;
+      }
+      .remark-code .remark-inline-code {
+          font-family: 'PT Mono';
+      }
+      .remark-inline-code { 
+          background-color: #31332b;
+          color: #a6e22e;
+      }
+      .remark-code {
+          font-size: 23px;
+      }
     </style>
   </head>
   <body>
@@ -20,25 +40,144 @@
 
 class: center, middle
 
-# Title
+# Intro to Clojurescript
+With Reagent
 
 ---
 
-# Agenda
+# What is Clojure?
 
-1. Introduction
-2. Deep-dive
-3. ...
+1. Functional
+2. Dynamic
+3. LISPy
+4. Simple to learn and use
+5. Has great concurrency support
+6. It's FUN!
+
+---
+background-image: url(aliens.jpg)
+
+# Lisps...
 
 ---
 
-# Introduction
+# Homoiconicity
+A list of stuff
+```
+'(+ 2 3 4 5)
+;=> (+ 2 3 4 5)
+```
+
+--
+
+Function execution:
+```
+(+ 2 3 4 5)
+;=> 14
+```
+
+---
+
+# Homoiconicity
+
+Evaluating a list of stuff
+```
+(eval '(+ 2 3 4 5))
+;=> 14
+```
+---
+
+# Lisp syntax
+
+```
+(filter odd? '(33 1 2 10 5))
+;=> (33 1 5)
+```
+### Function: `filter`
+
+### Parameters: `odd?`, `'(33 1 2 10 5)`
+
+---
+background-image: url(yo-dawg.jpg)
+---
+
+For some lisps, this simple syntax can become a little hard to read...
+
+Racket
+```racket
+(let ((x 3) (y 4))
+  (+ x y))
+```
+
+Clojure
+```
+(let [x 3
+      y 4]
+  (+ x y))
+```
+
+---
+# Clojure Data Structures
+List
+```
+'(:apple :orange :pair)
+```
+
+Vector
+```
+[:john-mccarthy :rich-hickey]
+```
+
+Map
+```
+{:age 25 :height 180 :glasses? true}
+```
+...
+
+---
+
+# Higher-order functions
+Lazy, composable
+```
+(take 10 
+    (filter even? 
+        (map #(* % %) (range))))
+;=> (0 4 16 36 64 100 144 196 256 324)
+```
+Extra-attractive:
+```
+(->> (range)
+     (map #(* % %))
+     (filter even?)
+     (take 10))
+```
+
+---
+background-image: url(https://d1gzo5vknddaf.cloudfront.net/uploads/image/file/1086/jonah_hill_excite.gif)
+---
+
+# Immutability as a default
+
+```
+(def a [1])
+;=> #'user/a
+(conj a 2)
+;=> [1 2]
+a
+;=> [1]
+
+```
+
+
 
     </textarea>
-    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
-    </script>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
     <script>
-      var slideshow = remark.create();
+    var slideshow = remark.create({
+        highlightLanguage:'clojure',
+        highlightStyle:'monokai',
+        highlightSpans:true
+    });
     </script>
   </body>
 </html>
