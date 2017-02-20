@@ -159,15 +159,26 @@ background-image: url(https://d1gzo5vknddaf.cloudfront.net/uploads/image/file/10
 # Immutability as a default
 
 ```
-(def a [1])
+(def a [1 2 3 4])
 ;=> #'user/a
-(conj a 2)
-;=> [1 2]
+(conj a 5)
+;=> [1 2 3 4 5]
+(map + a)
+;=> 15
 a
-;=> [1]
+;=> [1 2 3 4]
 
 ```
 
+---
+
+Mutability is calculated and controlled
+
+```
+(def my-atom (atom {:animal :cat :hates :owner}))
+
+...
+```
 
 
     </textarea>
