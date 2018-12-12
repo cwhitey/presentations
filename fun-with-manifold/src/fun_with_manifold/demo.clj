@@ -1,16 +1,29 @@
 (ns fun-with-manifold.demo
-  (:require [manifold.deferred :as d]))
+  (:require [manifold.deferred :as d]
+            [fun-with-manifold.fruit-api :as fruit-api]))
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Working with undelivered values using `manifold.deferred`
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
 
 ;;;;;;;;;;;;;;;;;;
 ;; `clojure.core/promise`
 ;;;;;;;;;;;;;;;;;;
 
 (def p (promise))
+;; => #'fun-with-manifold.demo/p
 
 (realized? p)
+;; => false
 
 (deliver p :deliver-me!)
-;; => nil
 
 p
 
@@ -29,9 +42,9 @@ p
 (def p (promise))
 
 (future
-  (println "running on separate thread, about to wait for a promise\n")
-  (println "now revealing the value of promise: " (deref p))
-  (println "execution finished...\n\n"))
+  (println "1. Running on separate thread, about to wait for a promise\n")
+  (println "2. Now revealing the value of promise: " (deref p))
+  (println "3. Execution finished...\n\n"))
 
 (deliver p :ta-da!)
 
@@ -54,102 +67,128 @@ p
 ;; `manifold.deferred`
 ;;;;;;;;;;;;;;;;;;
 
-(def v (d/deferred))
+;; deliver a value
+(def value-deferred (d/deferred))
 
-v
+(d/success! value-deferred :this-is-a-value)
+
+(deref value-deferred)
+
+(deliver value-deferred :something)
+
+
+
 
 ;; an already delivered deferred
-(realized? (d/success-deferred :this-is-a-value))
+(realized? (d/success-deferred :success-value))
 
 
 
 
-;; deliver a value
-(def v (d/deferred))
 
-(deliver v 1)
-(d/success! v 1)
-
-@v
 
 
 
 ;; describe computation before a value arrives
-(def d (d/deferred))
+(def value-deferred (d/deferred))
 
-(def inc-d (d/chain d inc))
+(def incremented-deferred (d/chain value-deferred inc inc inc))
 
-(d/success! d 3)
+(d/success! value-deferred 3)
 
-d
+@value-deferred
 
-@inc-d
+@incremented-deferred
+
+
+
 
 
 
 
 ;; doesn't drastically affect program flow
-(def d (d/deferred))
+(def value-deferred (d/deferred))
 
-(def d2
-  (d/chain d (fn [v]
-               (println "I'm a Deferred!")
-               (println "My value is: " v "\n")
-               (inc v))))
+(def incremented-deferred
+  (d/chain value-deferred (fn [v]
+                            (println "I'm a Deferred!")
+                            (println "My value is: " v "\n")
+                            (inc v))))
 
-(d/success! d 100)
-@d
-@d2
+(d/chain incremented-deferred (fn [v]
+                                (println "My new value is: " v)))
+
+(d/success! value-deferred 100)
+
+@value-deferred
+
+@incremented-deferred
+
+
+
+
 
 
 ;; error handling
-(def d (d/deferred))
+(def value-deferred (d/deferred))
 
-(def d2 (d/chain d (partial / 1)))
+(def divide-deferred (d/chain value-deferred (partial / 1)))
 
-(def d3-catcher (d/catch d2 (fn [exception]
-                              (println "Don't divide by zero!")
-                              exception)))
+(def divide-deferred-caught (d/catch divide-deferred (fn [exception]
+                                                       (println "Don't divide by zero!")
+                                                       100)))
 
-(d/success! d 0)
+(def divide-deferred-caught2 (d/chain divide-deferred-caught inc))
+(d/success! value-deferred 0)
 
-@d3-catcher
+@divide-deferred-caught2
+
+
+
 
 
 
 
 
 ;; working with multiple deferreds
-(def bananas-query (d/deferred))
-(def apples-query (d/deferred))
+(def bananas-response (fruit-api/query-for-fruit))
+(def apples-response (fruit-api/query-for-fruit))
+(realized? bananas-response)
+(class bananas-response)
 
 (def total-fruit-salad-pieces
-  (d/let-flow [bananas bananas-query
-               apples  apples-query]
-    (println "Doing hardcore fruit calculations...")
+  (d/let-flow [bananas bananas-response
+               apples  apples-response]
+    (println "Doing hardcore fruit salad calculations...")
     (let [banana-pieces (* bananas 12)
           apple-pieces  (* apples 8)
           total-pieces  (+ banana-pieces apple-pieces)]
       (println "Finished with hardcore fruit calculations!\n")
+      (println "Our result is:" total-pieces)
       total-pieces)))
 
-;; database responds...
-(d/success! bananas-query 10)
-(d/success! apples-query 10)
+(class total-fruit-salad-pieces)
 
-(future (println @total-fruit-salad-pieces))
-
-
+;; api responds...
+(d/success! bananas-response 10)
+(d/error! apples-response (Exception. "No fruits!"))
 
 
+@total-fruit-salad-pieces
 
 
-(defn get-body [v] (:body v))
+
+
+
+
+
 
 ;; clojure threading
 (-> (util/web-request) ;;deferred
-    (d/catch #_d1 Exception handle-web-failure)
-    (d/chain #_d2 get-body)
-    (d/chain compute-result)
+    (d/catch #_v1 Exception handle-web-failure)
+    (d/chain #_v2 get-body)
+    (d/chain #_v3 compute-result)
     (d/catch Exception handle-processing-failures)
-    clojure.pprint/pprint)
+    (d/chain clojure.pprint/pprint))
+
+(d/chain (d/chain (d/catch (util/web-request) Exception ...) get-body))
